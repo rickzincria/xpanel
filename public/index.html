@@ -1,163 +1,181 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XPanel — Gerenciador Multi-Conta</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>XPanel — Multi-Conta Twitter/X</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-  :root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3d;--accent:#1d9bf0;--accent-dim:rgba(29,155,240,0.12);--accent-hover:#1a8cd8;--green:#00ba7c;--red:#f4212e;--yellow:#ffd400;--text:#e7e9ea;--text-muted:#71767b;--text-dim:#3d4049;--radius:14px;--radius-sm:8px}
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
-  .topbar{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-  .logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;letter-spacing:-0.5px}
-  .logo-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
-  .layout{flex:1;display:grid;grid-template-columns:280px 1fr;max-width:1200px;margin:0 auto;width:100%}
-  .sidebar{border-right:1px solid var(--border);padding:24px 20px;display:flex;flex-direction:column;gap:20px;min-height:calc(100vh - 60px)}
-  .sidebar-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);padding-left:4px}
-  .btn-connect{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
-  .btn-connect:hover{background:var(--accent-hover)}
-  .accounts-list{display:flex;flex-direction:column;gap:6px}
-  .account-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .15s,background .15s;user-select:none}
-  .account-card:hover{background:var(--surface2)}
-  .account-card.selected{border-color:var(--accent);background:var(--accent-dim)}
-  .account-card .check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
-  .account-card.selected .check{background:var(--accent);border-color:var(--accent)}
-  .account-card.selected .check::after{content:'';width:5px;height:9px;border:2px solid white;border-left:none;border-top:none;transform:rotate(45deg) translate(-1px,-1px);display:block}
-  .account-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0}
-  .account-avatar-placeholder{width:34px;height:34px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent);flex-shrink:0}
-  .account-info{flex:1;min-width:0}
-  .account-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .account-handle{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .btn-remove{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:4px;font-size:16px;flex-shrink:0;transition:color .15s}
-  .btn-remove:hover{color:var(--red)}
-  .select-all-row{display:flex;align-items:center;justify-content:space-between}
-  .btn-text{background:none;border:none;color:var(--accent);font-size:12px;font-weight:500;cursor:pointer;padding:0}
-  .btn-text:hover{text-decoration:underline}
-  .empty-accounts{text-align:center;color:var(--text-muted);font-size:13px;padding:16px 0;line-height:1.6}
-  .main{padding:28px 32px;display:flex;flex-direction:column;gap:24px;max-width:680px}
-  .composer{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:16px}
-  .composer-header{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
-  .composer-target{font-size:12px;color:var(--text-muted);background:var(--surface2);border-radius:6px;padding:4px 8px}
-  .tweet-textarea{background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;font-size:16px;line-height:1.6;resize:none;width:100%;min-height:100px;caret-color:var(--accent)}
-  .tweet-textarea::placeholder{color:var(--text-dim)}
-  .char-count{font-size:12px;color:var(--text-muted);text-align:right}
-  .char-count.warn{color:var(--yellow)}.char-count.over{color:var(--red)}
-  .media-zone{border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
-  .media-zone:hover,.media-zone.dragover{border-color:var(--accent);background:var(--accent-dim)}
-  .media-zone-icon{font-size:28px;margin-bottom:6px}
-  .media-zone-text{font-size:13px;color:var(--text-muted)}
-  .media-zone-sub{font-size:11px;color:var(--text-dim);margin-top:4px}
-  input[type="file"]{display:none}
-  .media-previews{display:flex;flex-wrap:wrap;gap:10px}
-  .media-preview-item{position:relative;border-radius:var(--radius-sm);overflow:hidden;background:var(--surface2)}
-  .media-preview-item img,.media-preview-item video{width:120px;height:90px;object-fit:cover;display:block}
-  .media-preview-item .remove-media{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
-  .upload-progress{background:var(--surface2);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:10px}
-  .spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .composer-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px;border-top:1px solid var(--border)}
-  .composer-actions{display:flex;gap:8px}
-  .btn-media{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color .15s,color .15s}
-  .btn-media:hover{border-color:var(--accent);color:var(--accent)}
-  .btn-post{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s,opacity .15s}
-  .btn-post:hover:not(:disabled){background:var(--accent-hover)}
-  .btn-post:disabled{opacity:.4;cursor:not-allowed}
-  .results-panel{display:flex;flex-direction:column;gap:8px}
-  .result-item{background:var(--surface);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:12px;font-size:13px;border-left:3px solid transparent}
-  .result-item.ok{border-left-color:var(--green)}.result-item.fail{border-left-color:var(--red)}
-  .result-icon{font-size:16px;flex-shrink:0}
-  .result-text{flex:1}
-  .result-text a{color:var(--accent);text-decoration:none;font-size:12px;margin-left:8px}
-  .result-error{font-size:11px;color:var(--red);margin-top:2px}
-  .toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:999;pointer-events:none}
-  .toast{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;font-weight:500;white-space:nowrap;animation:toastIn .25s ease;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-  .toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}
-  @keyframes toastIn{from{opacity:0;transform:translateY(8px)}}
-  .posting-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
-  .posting-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
-  .posting-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-  .hidden{display:none!important}
-  @media(max-width:700px){.layout{grid-template-columns:1fr}.sidebar{min-height:auto;border-right:none;border-bottom:1px solid var(--border)}.main{padding:20px 16px}}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+:root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3d;--accent:#1d9bf0;--accent-dim:rgba(29,155,240,0.12);--accent-hover:#1a8cd8;--green:#00ba7c;--red:#f4212e;--yellow:#ffd400;--text:#e7e9ea;--text-muted:#71767b;--text-dim:#3d4049;--radius:14px;--radius-sm:8px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:100%;max-width:400px}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;font-size:20px;font-weight:700}
+.auth-title{font-size:22px;font-weight:700;margin-bottom:6px}
+.auth-sub{font-size:14px;color:var(--text-muted);margin-bottom:28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--text-muted)}
+.field input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s}
+.field input:focus{border-color:var(--accent)}
+.field input::placeholder{color:var(--text-dim)}
+.btn-primary{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:12px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:var(--accent-hover)}
+.auth-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--text-muted)}
+.auth-switch a{color:var(--accent);text-decoration:none;font-weight:500;cursor:pointer}
+.auth-error{background:rgba(244,33,46,0.1);border:1px solid rgba(244,33,46,0.3);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:16px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700}
+.logo-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text-muted)}
+.btn-logout{background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-sm);padding:6px 12px;font-size:12px;cursor:pointer;transition:all .15s}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+.layout{flex:1;display:grid;grid-template-columns:280px 1fr;max-width:1200px;margin:0 auto;width:100%}
+.sidebar{border-right:1px solid var(--border);padding:24px 20px;display:flex;flex-direction:column;gap:20px;min-height:calc(100vh - 60px)}
+.sidebar-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);padding-left:4px}
+.btn-connect{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+.btn-connect:hover{background:var(--accent-hover)}
+.accounts-list{display:flex;flex-direction:column;gap:6px}
+.account-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .15s,background .15s;user-select:none}
+.account-card:hover{background:var(--surface2)}
+.account-card.selected{border-color:var(--accent);background:var(--accent-dim)}
+.account-card .check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.account-card.selected .check{background:var(--accent);border-color:var(--accent)}
+.account-card.selected .check::after{content:'';width:5px;height:9px;border:2px solid white;border-left:none;border-top:none;transform:rotate(45deg) translate(-1px,-1px);display:block}
+.account-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.account-avatar-placeholder{width:34px;height:34px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent);flex-shrink:0}
+.account-info{flex:1;min-width:0}
+.account-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-handle{font-size:12px;color:var(--text-muted)}
+.btn-remove{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:4px;font-size:16px;flex-shrink:0;transition:color .15s;line-height:1}
+.btn-remove:hover{color:var(--red)}
+.select-all-row{display:flex;align-items:center;justify-content:space-between}
+.btn-text{background:none;border:none;color:var(--accent);font-size:12px;font-weight:500;cursor:pointer;padding:0}
+.btn-text:hover{text-decoration:underline}
+.empty-accounts{text-align:center;color:var(--text-muted);font-size:13px;padding:16px 0;line-height:1.7}
+.main{padding:28px 32px;display:flex;flex-direction:column;gap:24px;max-width:680px}
+.composer{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:16px}
+.composer-header{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.composer-target{font-size:12px;color:var(--text-muted);background:var(--surface2);border-radius:6px;padding:4px 8px}
+.tweet-textarea{background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;font-size:16px;line-height:1.6;resize:none;width:100%;min-height:100px;caret-color:var(--accent)}
+.tweet-textarea::placeholder{color:var(--text-dim)}
+.char-count{font-size:12px;color:var(--text-muted);text-align:right}
+.char-count.warn{color:var(--yellow)}.char-count.over{color:var(--red)}
+.media-zone{border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.media-zone:hover,.media-zone.dragover{border-color:var(--accent);background:var(--accent-dim)}
+.media-zone-icon{font-size:28px;margin-bottom:6px}
+.media-zone-text{font-size:13px;color:var(--text-muted)}
+.media-zone-sub{font-size:11px;color:var(--text-dim);margin-top:4px}
+input[type="file"]{display:none}
+.media-previews{display:flex;flex-wrap:wrap;gap:10px}
+.media-preview-item{position:relative;border-radius:var(--radius-sm);overflow:hidden;background:var(--surface2)}
+.media-preview-item img,.media-preview-item video{width:120px;height:90px;object-fit:cover;display:block}
+.media-preview-item .remove-media{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.upload-progress{background:var(--surface2);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:10px}
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.composer-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px;border-top:1px solid var(--border)}
+.btn-media{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color .15s,color .15s}
+.btn-media:hover{border-color:var(--accent);color:var(--accent)}
+.btn-post{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s,opacity .15s}
+.btn-post:hover:not(:disabled){background:var(--accent-hover)}
+.btn-post:disabled{opacity:.4;cursor:not-allowed}
+.results-panel{display:flex;flex-direction:column;gap:8px}
+.result-item{background:var(--surface);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:12px;font-size:13px;border-left:3px solid transparent}
+.result-item.ok{border-left-color:var(--green)}.result-item.fail{border-left-color:var(--red)}
+.result-text a{color:var(--accent);text-decoration:none;font-size:12px;margin-left:8px}
+.result-error{font-size:11px;color:var(--red);margin-top:2px}
+.posting-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.posting-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.posting-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:999;pointer-events:none}
+.toast{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;font-weight:500;white-space:nowrap;animation:toastIn .25s ease;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}}
+.hidden{display:none!important}
+@media(max-width:700px){.layout{grid-template-columns:1fr}.sidebar{min-height:auto;border-right:none;border-bottom:1px solid var(--border)}.main{padding:20px 16px}}
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div class="logo">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-    XPanel <span class="logo-badge">Multi-Conta</span>
+<div id="authScreen" class="auth-screen">
+  <div id="loginBox" class="auth-box">
+    <div class="auth-logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>XPanel</div>
+    <div class="auth-title">Entrar na sua conta</div>
+    <div class="auth-sub">Gerencie suas contas do Twitter em um só lugar.</div>
+    <div id="loginError" class="auth-error hidden"></div>
+    <div class="field"><label>E-mail</label><input type="email" id="loginEmail" placeholder="seu@email.com"></div>
+    <div class="field"><label>Senha</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
+    <div class="auth-switch">Não tem conta? <a onclick="showRegister()">Criar conta grátis</a></div>
   </div>
-</header>
-<div class="layout">
-  <aside class="sidebar">
-    <div>
-      <div class="sidebar-title" style="margin-bottom:12px">Contas Conectadas</div>
-      <button class="btn-connect" onclick="connectAccount()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        Conectar Conta
-      </button>
-    </div>
-    <div>
-      <div class="select-all-row" style="margin-bottom:10px">
-        <span class="sidebar-title">Selecionar para Postar</span>
-        <div style="display:flex;gap:8px"><button class="btn-text" onclick="selectAll()">Todas</button><button class="btn-text" onclick="selectNone()">Nenhuma</button></div>
-      </div>
-      <div class="accounts-list" id="accountsList">
-        <div class="empty-accounts" id="emptyAccounts">Nenhuma conta conectada.<br>Clique em "Conectar Conta" para começar.</div>
-      </div>
-    </div>
-  </aside>
-  <main class="main">
-    <div class="composer">
-      <div class="composer-header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        Novo Post <span class="composer-target" id="targetLabel">0 contas selecionadas</span>
-      </div>
-      <textarea class="tweet-textarea" id="tweetText" placeholder="O que está acontecendo?" maxlength="280" oninput="updateCharCount()"></textarea>
-      <div class="char-count" id="charCount">0 / 280</div>
-      <div class="media-previews" id="mediaPreviews"></div>
-      <div class="upload-progress hidden" id="uploadProgress"><div class="spinner"></div><span id="uploadProgressText">Enviando mídia...</span></div>
-      <div class="media-zone" id="mediaZone" onclick="document.getElementById('mediaInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-        <div class="media-zone-icon">📎</div>
-        <div class="media-zone-text">Clique ou arraste arquivos aqui</div>
-        <div class="media-zone-sub">Imagens (JPG, PNG, GIF) · Vídeos (MP4, MOV) · Máx 4 arquivos</div>
-      </div>
-      <input type="file" id="mediaInput" multiple accept="image/*,video/*" onchange="handleFiles(this.files)">
-      <div class="composer-footer">
-        <div class="composer-actions"><button class="btn-media" onclick="document.getElementById('mediaInput').click()">🖼️ Imagem/Vídeo</button></div>
-        <button class="btn-post" id="btnPost" onclick="postTweet()" disabled>Postar</button>
-      </div>
-    </div>
-    <div class="results-panel" id="resultsPanel"></div>
-  </main>
+  <div id="registerBox" class="auth-box hidden">
+    <div class="auth-logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>XPanel</div>
+    <div class="auth-title">Criar conta</div>
+    <div class="auth-sub">Grátis. Sem cartão de crédito.</div>
+    <div id="registerError" class="auth-error hidden"></div>
+    <div class="field"><label>Nome</label><input type="text" id="registerName" placeholder="Seu nome"></div>
+    <div class="field"><label>E-mail</label><input type="email" id="registerEmail" placeholder="seu@email.com"></div>
+    <div class="field"><label>Senha</label><input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres"></div>
+    <button class="btn-primary" onclick="doRegister()">Criar conta</button>
+    <div class="auth-switch">Já tem conta? <a onclick="showLogin()">Entrar</a></div>
+  </div>
 </div>
-<div class="posting-overlay hidden" id="postingOverlay">
-  <div class="posting-box"><div class="posting-spinner"></div><div style="font-size:15px;font-weight:600">Postando...</div><div style="font-size:13px;color:var(--text-muted)" id="postingStatus">Enviando para as contas selecionadas</div></div>
+<div id="panel" class="hidden" style="display:flex;flex-direction:column;flex:1">
+  <header class="topbar">
+    <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>XPanel <span class="logo-badge">Multi-Conta</span></div>
+    <div class="topbar-right"><span id="userGreeting"></span><button class="btn-logout" onclick="doLogout()">Sair</button></div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <div><div class="sidebar-title" style="margin-bottom:12px">Contas do Twitter</div><button class="btn-connect" onclick="connectTwitter()"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>Conectar Twitter</button></div>
+      <div><div class="select-all-row" style="margin-bottom:10px"><span class="sidebar-title">Selecionar para Postar</span><div style="display:flex;gap:8px"><button class="btn-text" onclick="selectAll()">Todas</button><button class="btn-text" onclick="selectNone()">Nenhuma</button></div></div><div class="accounts-list" id="accountsList"><div class="empty-accounts" id="emptyAccounts">Nenhuma conta conectada.<br>Clique em "Conectar Twitter".</div></div></div>
+    </aside>
+    <main class="main">
+      <div class="composer">
+        <div class="composer-header"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>Novo Post<span class="composer-target" id="targetLabel">0 contas selecionadas</span></div>
+        <textarea class="tweet-textarea" id="tweetText" placeholder="O que está acontecendo?" maxlength="280" oninput="updateCharCount()"></textarea>
+        <div class="char-count" id="charCount">0 / 280</div>
+        <div class="media-previews" id="mediaPreviews"></div>
+        <div class="upload-progress hidden" id="uploadProgress"><div class="spinner"></div><span id="uploadProgressText">Enviando mídia...</span></div>
+        <div class="media-zone" id="mediaZone" onclick="document.getElementById('mediaInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"><div class="media-zone-icon">📎</div><div class="media-zone-text">Clique ou arraste arquivos aqui</div><div class="media-zone-sub">Imagens (JPG,PNG,GIF) · Vídeos (MP4,MOV) · Máx 4</div></div>
+        <input type="file" id="mediaInput" multiple accept="image/*,video/*" onchange="handleFiles(this.files)">
+        <div class="composer-footer"><button class="btn-media" onclick="document.getElementById('mediaInput').click()">🖼️ Imagem/Vídeo</button><button class="btn-post" id="btnPost" onclick="postTweet()" disabled>Postar</button></div>
+      </div>
+      <div class="results-panel" id="resultsPanel"></div>
+    </main>
+  </div>
 </div>
+<div class="posting-overlay hidden" id="postingOverlay"><div class="posting-box"><div class="posting-spinner"></div><div style="font-size:15px;font-weight:600">Postando...</div><div style="font-size:13px;color:var(--text-muted)" id="postingStatus">Enviando...</div></div></div>
 <div class="toast-container" id="toastContainer"></div>
 <script>
 let accounts=[],selected=new Set(),mediaFiles=[];
-async function init(){const p=new URLSearchParams(location.search);if(p.get('connected')){toast('@'+p.get('user')+' conectado!','success');history.replaceState({},'','/');}if(p.get('error')){toast('Erro: '+decodeURIComponent(p.get('error')),'error');history.replaceState({},'','/');}await loadAccounts();}
-async function loadAccounts(){try{const res=await fetch('/accounts');accounts=await res.json();renderAccounts();}catch(e){toast('Servidor offline. Inicie server.js','error');}}
-function renderAccounts(){const list=document.getElementById('accountsList');const empty=document.getElementById('emptyAccounts');list.querySelectorAll('.account-card').forEach(el=>el.remove());if(!accounts.length){empty.classList.remove('hidden');updatePostButton();return;}empty.classList.add('hidden');accounts.forEach(acc=>{const card=document.createElement('div');card.className='account-card'+(selected.has(acc.id)?' selected':'');card.dataset.id=acc.id;const av=acc.avatar?'<img class="account-avatar" src="'+acc.avatar+'" alt="'+acc.name+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'';const ph='<div class="account-avatar-placeholder" '+(acc.avatar?'style="display:none"':'')+'>'+acc.name[0].toUpperCase()+'</div>';card.innerHTML='<div class="check"></div>'+av+ph+'<div class="account-info"><div class="account-name">'+esc(acc.name)+'</div><div class="account-handle">@'+esc(acc.username)+'</div></div><button class="btn-remove" title="Remover" onclick="removeAccount(event,\''+acc.id+'\')">×</button>';card.addEventListener('click',e=>{if(e.target.classList.contains('btn-remove'))return;toggleAccount(acc.id,card);});list.appendChild(card);});updateTargetLabel();updatePostButton();}
+async function init(){const r=await fetch('/api/me');const d=await r.json();if(d.loggedIn){showPanel(d.name);}else{document.getElementById('authScreen').classList.remove('hidden');}}
+function showPanel(name){document.getElementById('authScreen').classList.add('hidden');document.getElementById('panel').classList.remove('hidden');document.getElementById('userGreeting').textContent='Olá, '+name;loadAccounts();window.addEventListener('message',e=>{if(e.data?.type==='xpanel-auth'){if(e.data.username){toast('@'+e.data.username+' conectado!','success');loadAccounts();}else if(e.data.error){toast('Erro: '+e.data.error,'error');}}});}
+function showLogin(){document.getElementById('loginBox').classList.remove('hidden');document.getElementById('registerBox').classList.add('hidden');}
+function showRegister(){document.getElementById('registerBox').classList.remove('hidden');document.getElementById('loginBox').classList.add('hidden');}
+async function doLogin(){const email=document.getElementById('loginEmail').value.trim();const password=document.getElementById('loginPassword').value;const errEl=document.getElementById('loginError');errEl.classList.add('hidden');const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const d=await r.json();if(d.ok){showPanel(d.name);}else{errEl.textContent=d.error;errEl.classList.remove('hidden');}}
+async function doRegister(){const name=document.getElementById('registerName').value.trim();const email=document.getElementById('registerEmail').value.trim();const password=document.getElementById('registerPassword').value;const errEl=document.getElementById('registerError');errEl.classList.add('hidden');const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password})});const d=await r.json();if(d.ok){showPanel(d.name);}else{errEl.textContent=d.error;errEl.classList.remove('hidden');}}
+async function doLogout(){await fetch('/api/logout',{method:'POST'});accounts=[];selected.clear();mediaFiles=[];document.getElementById('panel').classList.add('hidden');document.getElementById('authScreen').classList.remove('hidden');showLogin();}
+document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(!document.getElementById('loginBox').classList.contains('hidden'))doLogin();else if(!document.getElementById('registerBox').classList.contains('hidden'))doRegister();});
+async function loadAccounts(){try{const r=await fetch('/api/accounts');accounts=await r.json();renderAccounts();}catch{toast('Erro ao carregar contas','error');}}
+function renderAccounts(){const list=document.getElementById('accountsList');const empty=document.getElementById('emptyAccounts');list.querySelectorAll('.account-card').forEach(el=>el.remove());if(!accounts.length){empty.classList.remove('hidden');updatePostButton();return;}empty.classList.add('hidden');accounts.forEach(acc=>{const card=document.createElement('div');card.className='account-card'+(selected.has(acc.id)?' selected':'');const av=acc.avatar?'<img class="account-avatar" src="'+acc.avatar+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'';const ph='<div class="account-avatar-placeholder" '+(acc.avatar?'style="display:none"':'')+'>'+acc.name[0].toUpperCase()+'</div>';card.innerHTML='<div class="check"></div>'+av+ph+'<div class="account-info"><div class="account-name">'+esc(acc.name)+'</div><div class="account-handle">@'+esc(acc.username)+'</div></div><button class="btn-remove" onclick="removeAccount(event,'+acc.id+')">×</button>';card.addEventListener('click',e=>{if(e.target.classList.contains('btn-remove'))return;toggleAccount(acc.id,card);});list.appendChild(card);});updateTargetLabel();updatePostButton();}
 function toggleAccount(id,card){if(selected.has(id)){selected.delete(id);card.classList.remove('selected');}else{selected.add(id);card.classList.add('selected');}updateTargetLabel();updatePostButton();}
 function selectAll(){selected=new Set(accounts.map(a=>a.id));document.querySelectorAll('.account-card').forEach(c=>c.classList.add('selected'));updateTargetLabel();updatePostButton();}
 function selectNone(){selected.clear();document.querySelectorAll('.account-card').forEach(c=>c.classList.remove('selected'));updateTargetLabel();updatePostButton();}
-async function removeAccount(e,id){e.stopPropagation();await fetch('/accounts/'+id,{method:'DELETE'});selected.delete(id);accounts=accounts.filter(a=>a.id!==id);renderAccounts();toast('Conta removida','success');}
-async function connectAccount(){try{const res=await fetch('/auth/start');const{url,error}=await res.json();if(error)return toast(error,'error');const w=window.open(url,'xauth','width=600,height=700');const t=setInterval(()=>{try{if(w.location.href.includes('railway.app')){clearInterval(t);w.close();setTimeout(loadAccounts,1500);}}catch(e){}if(w&&w.closed){clearInterval(t);setTimeout(loadAccounts,1500);}},500);}catch{toast('Servidor offline. Inicie server.js','error');}}
-function updateCharCount(){const t=document.getElementById('tweetText').value;const l=t.length;const el=document.getElementById('charCount');el.textContent=l+' / 280';el.className='char-count'+(l>260?(l>280?' over':' warn'):'');updatePostButton();}
+async function removeAccount(e,id){e.stopPropagation();await fetch('/api/accounts/'+id,{method:'DELETE'});selected.delete(id);accounts=accounts.filter(a=>a.id!==id);renderAccounts();toast('Conta desconectada','success');}
+async function connectTwitter(){try{const r=await fetch('/auth/start');const d=await r.json();if(d.error)return toast(d.error,'error');window.open(d.url,'xauth','width=600,height=700,left=300,top=100');}catch{toast('Erro ao iniciar conexão','error');}}
+function updateCharCount(){const l=document.getElementById('tweetText').value.length;const el=document.getElementById('charCount');el.textContent=l+' / 280';el.className='char-count'+(l>260?(l>280?' over':' warn'):'');updatePostButton();}
 function updateTargetLabel(){const n=selected.size;document.getElementById('targetLabel').textContent=n===0?'nenhuma conta':n===1?'1 conta selecionada':n+' contas selecionadas';}
-function updatePostButton(){const t=document.getElementById('tweetText').value.trim();document.getElementById('btnPost').disabled=!(( t.length>0||mediaFiles.length>0)&&selected.size>0);}
+function updatePostButton(){const t=document.getElementById('tweetText').value.trim();document.getElementById('btnPost').disabled=!((t.length>0||mediaFiles.length>0)&&selected.size>0);}
 function handleDragOver(e){e.preventDefault();document.getElementById('mediaZone').classList.add('dragover');}
 function handleDragLeave(){document.getElementById('mediaZone').classList.remove('dragover');}
 function handleDrop(e){e.preventDefault();document.getElementById('mediaZone').classList.remove('dragover');handleFiles(e.dataTransfer.files);}
-function handleFiles(fileList){const allowed=Array.from(fileList).filter(f=>f.type.startsWith('image/')||f.type.startsWith('video/'));if(mediaFiles.length+allowed.length>4){toast('Máximo 4 arquivos','error');return;}allowed.forEach(f=>{mediaFiles.push(f);const item=document.createElement('div');item.className='media-preview-item';item.dataset.name=f.name;const url=URL.createObjectURL(f);item.innerHTML=(f.type.startsWith('video/')?'<video src="'+url+'" muted playsinline></video>':'<img src="'+url+'" alt="'+f.name+'">')+'<button class="remove-media" onclick="removeMedia(\''+f.name+'\',this.parentElement)">×</button>';document.getElementById('mediaPreviews').appendChild(item);});updatePostButton();}
+function handleFiles(fileList){const allowed=Array.from(fileList).filter(f=>f.type.startsWith('image/')||f.type.startsWith('video/'));if(mediaFiles.length+allowed.length>4){toast('Máximo 4 arquivos','error');return;}allowed.forEach(f=>{mediaFiles.push(f);const item=document.createElement('div');item.className='media-preview-item';const url=URL.createObjectURL(f);item.innerHTML=(f.type.startsWith('video/')?'<video src="'+url+'" muted playsinline></video>':'<img src="'+url+'">')+'<button class="remove-media" onclick="removeMedia(\''+f.name+'\',this.parentElement)">×</button>';document.getElementById('mediaPreviews').appendChild(item);});updatePostButton();}
 function removeMedia(name,el){mediaFiles=mediaFiles.filter(f=>f.name!==name);el.remove();updatePostButton();}
-async function uploadMediaFiles(){if(!mediaFiles.length)return[];const accountId=[...selected][0];const ids=[];for(let i=0;i<mediaFiles.length;i++){const f=mediaFiles[i];document.getElementById('uploadProgressText').textContent='Enviando '+f.name+' ('+(i+1)+'/'+mediaFiles.length+')...';const fd=new FormData();fd.append('media',f);fd.append('accountId',accountId);const res=await fetch('/upload-media',{method:'POST',body:fd});const data=await res.json();if(data.mediaId)ids.push(data.mediaId);else throw new Error('Falha ao enviar '+f.name+': '+data.error);}return ids;}
-async function postTweet(){const text=document.getElementById('tweetText').value.trim();const accountIds=[...selected];if(!accountIds.length)return toast('Selecione ao menos uma conta','error');if(!text&&!mediaFiles.length)return toast('Escreva algo ou adicione mídia','error');document.getElementById('postingOverlay').classList.remove('hidden');document.getElementById('resultsPanel').innerHTML='';let mediaIds=[];try{if(mediaFiles.length){document.getElementById('uploadProgress').classList.remove('hidden');document.getElementById('postingStatus').textContent='Enviando mídia...';mediaIds=await uploadMediaFiles();document.getElementById('uploadProgress').classList.add('hidden');}document.getElementById('postingStatus').textContent='Postando em '+accountIds.length+' conta(s)...';const res=await fetch('/post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accountIds,text,mediaIds})});const{results}=await res.json();showResults(results);const ok=results.filter(r=>r.ok).length;const fail=results.length-ok;if(ok>0){document.getElementById('tweetText').value='';document.getElementById('mediaPreviews').innerHTML='';mediaFiles=[];updateCharCount();toast('Postado em '+ok+' conta(s)!'+(fail?' '+fail+' falha(s).':''),'success');}else toast('Falha ao postar. Veja os erros abaixo.','error');}catch(err){toast('Erro: '+err.message,'error');}finally{document.getElementById('postingOverlay').classList.add('hidden');document.getElementById('uploadProgress').classList.add('hidden');updatePostButton();}}
-function showResults(results){const panel=document.getElementById('resultsPanel');panel.innerHTML='';results.forEach(r=>{const item=document.createElement('div');item.className='result-item '+(r.ok?'ok':'fail');item.innerHTML='<span class="result-icon">'+(r.ok?'✅':'❌')+'</span><div class="result-text"><strong>@'+esc(r.username||r.accountId)+'</strong>'+(r.ok?' — Postado com sucesso':'')+(r.ok?'<a href="https://twitter.com/'+r.username+'/status/'+r.tweetId+'" target="_blank">Ver post →</a>':'')+(r.ok?'':'<div class="result-error">'+esc(r.error)+'</div>')+'</div>';panel.appendChild(item);});}
+async function uploadMediaFiles(){if(!mediaFiles.length)return[];const accountId=[...selected][0];const ids=[];for(let i=0;i<mediaFiles.length;i++){const f=mediaFiles[i];document.getElementById('uploadProgressText').textContent='Enviando '+f.name+' ('+(i+1)+'/'+mediaFiles.length+')...';const fd=new FormData();fd.append('media',f);fd.append('accountId',accountId);const r=await fetch('/api/upload-media',{method:'POST',body:fd});const d=await r.json();if(d.mediaId)ids.push(d.mediaId);else throw new Error('Falha: '+d.error);}return ids;}
+async function postTweet(){const text=document.getElementById('tweetText').value.trim();const accountIds=[...selected];if(!accountIds.length)return toast('Selecione ao menos uma conta','error');if(!text&&!mediaFiles.length)return toast('Escreva algo ou adicione mídia','error');document.getElementById('postingOverlay').classList.remove('hidden');document.getElementById('resultsPanel').innerHTML='';let mediaIds=[];try{if(mediaFiles.length){document.getElementById('uploadProgress').classList.remove('hidden');document.getElementById('postingStatus').textContent='Enviando mídia...';mediaIds=await uploadMediaFiles();document.getElementById('uploadProgress').classList.add('hidden');}document.getElementById('postingStatus').textContent='Postando em '+accountIds.length+' conta(s)...';const r=await fetch('/api/post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accountIds,text,mediaIds})});const{results}=await r.json();showResults(results);const ok=results.filter(r=>r.ok).length;if(ok>0){document.getElementById('tweetText').value='';document.getElementById('mediaPreviews').innerHTML='';mediaFiles=[];updateCharCount();toast('Postado em '+ok+' conta(s)!','success');}else toast('Falha ao postar.','error');}catch(err){toast('Erro: '+err.message,'error');}finally{document.getElementById('postingOverlay').classList.add('hidden');document.getElementById('uploadProgress').classList.add('hidden');updatePostButton();}}
+function showResults(results){const panel=document.getElementById('resultsPanel');panel.innerHTML='';results.forEach(r=>{const item=document.createElement('div');item.className='result-item '+(r.ok?'ok':'fail');item.innerHTML='<span style="font-size:16px">'+(r.ok?'✅':'❌')+'</span><div class="result-text"><strong>@'+esc(r.username||r.accountId)+'</strong>'+(r.ok?' — Postado com sucesso':'')+(r.ok?'<a href="https://twitter.com/'+r.username+'/status/'+r.tweetId+'" target="_blank">Ver post →</a>':'')+(r.ok?'':'<div class="result-error">'+esc(r.error)+'</div>')+'</div>';panel.appendChild(item);});}
 function toast(msg,type='success'){const c=document.getElementById('toastContainer');const el=document.createElement('div');el.className='toast '+type;el.textContent=msg;c.appendChild(el);setTimeout(()=>el.remove(),3500);}
-function esc(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 init();
 </script>
 </body>
