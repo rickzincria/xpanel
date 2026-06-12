@@ -4,7 +4,7 @@ const multer  = require('multer');
 const cors    = require('cors');
 const fs      = require('fs');
 const path    = require('path');
-const crypto  = require('crypto');
+const crypto  = require('crypto');h
 const https   = require('https');
 const http    = require('http');
 
@@ -88,7 +88,7 @@ app.get('/auth/start', (req, res) => {
   const params = new URLSearchParams({
     response_type: 'code', client_id: process.env.TWITTER_CLIENT_ID,
     redirect_uri: process.env.CALLBACK_URL || 'http://localhost:3000/auth/callback',
-    scope: 'tweet.read tweet.write users.read offline.access media.write',
+    scope: 'tweet.read tweet.write users.read offline.access',
     state, code_challenge: pkce.challenge, code_challenge_method: 'S256',
   });
   res.json({ url: `https://twitter.com/i/oauth2/authorize?${params}` });
